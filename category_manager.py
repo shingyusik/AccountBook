@@ -52,9 +52,7 @@ class CategoryManager:
             updated_categories = [category_list.item(i).text() for i in range(category_list.count())]
             self.categories[self.name] = updated_categories
             category_input.clear()
-            # category_input.addItems(updated_categories)
             category_input.add_items(updated_categories)
-            # category_input = MultiSelectComboBox(updated_categories)
             self.save_categories(log)
             dialog.accept()
 

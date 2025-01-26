@@ -63,8 +63,6 @@ class AccountBook(QMainWindow):
         date_input = f"{year}-{month}-{day}"
         
         # Category
-        # category_input = QComboBox()
-        # category_input.addItems(categories)
         category_input = MultiSelectComboBox(categories)
         edit_categories_button = QPushButton("Edit Categories")        
         layout.addWidget(QLabel('Category:'), 1, 0, 1, 1)
@@ -136,7 +134,6 @@ class AccountBook(QMainWindow):
                 QMessageBox.warning(self, "Date Mismatch", "The year and month of the entry must match the table data.")
                 return
                     
-        # category = category_input.currentText()
         category = category_input.selected_items
         description = description_input.text()
         amount = amount_input.text()
@@ -148,7 +145,6 @@ class AccountBook(QMainWindow):
         row_position = table.rowCount()
         table.insertRow(row_position)
         table.setItem(row_position, 0, QTableWidgetItem(date))
-        # table.setItem(row_position, 1, QTableWidgetItem(category))
         table.setItem(row_position, 1, QTableWidgetItem(", ".join(category)))
         table.setItem(row_position, 2, QTableWidgetItem(description))
         table.setItem(row_position, 3, QTableWidgetItem(amount))
