@@ -153,9 +153,18 @@ class AccountBook(QMainWindow):
         amount_input.clear()
         table.modified = True
 
+        self.clear_selection(category_input)
+
     def edit_categories(self, name, category_input, log):
         self.manager.name = name
         self.manager.edit_categories(category_input, log)
+
+    def clear_selection(self, catetogies):
+        for i in range(catetogies.list_widget.count()):
+            checkbox = catetogies.list_widget.itemWidget(catetogies.list_widget.item(i))
+            checkbox.setChecked(False)
+        catetogies.selected_items = []
+        catetogies.setEditText("")        
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

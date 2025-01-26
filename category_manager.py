@@ -88,7 +88,8 @@ class CategoryManager:
 class MultiSelectComboBox(QComboBox):
     def __init__(self, items, parent=None):
         super().__init__(parent)
-        self.setEditable(False)
+        self.setEditable(True)
+        self.lineEdit().setReadOnly(True)
         self.list_widget = QListWidget()
         self.items = items
         self.selected_items = []
