@@ -1,8 +1,7 @@
 import os
 import csv
-from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QFileDialog, QMessageBox
-from utils import toggle_add_button
-import log as Log
+from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QFileDialog, QMessageBox, QPushButton
+from utils import toggle_add_button, append_log
 
 def save_to_file(table: QTableWidget, tab_name: str, date: str, log) -> None:
     """
@@ -25,18 +24,18 @@ def save_to_file(table: QTableWidget, tab_name: str, date: str, log) -> None:
             writer = csv.writer(file)
 
             # Write headers
-            headers = [table.horizontalHeaderItem(i).text() for i in range(table.columnCount())]
+            headers = [table.horizontalHeaderItem(i).text() for i in range(table.columnCount()-1)]
             writer.writerow(headers)
 
             # Write rows
             for row in range(table.rowCount()):
                 values = [
                     table.item(row, col).text() if table.item(row, col) else ""
-                    for col in range(table.columnCount())
+                    for col in range(table.columnCount()-1)
                 ]
                 writer.writerow(values)
 
-        Log.append_log(log, f"Data successfully saved to {path}")
+        append_log(log, f"Data successfully saved to {path}")
         # QMessageBox.information(None, "File Saved", f"Data successfully saved to {path}")
     except Exception as e:
         QMessageBox.critical(None, "Error", f"Failed to save file: {e}")
@@ -57,7 +56,7 @@ def load_from_file(table: QTableWidget, tab_name: str, date: str, log) -> None:
 
     if not os.path.exists(path):
         table.setRowCount(0)  # Reset table for new input
-        return
+        return path
 
     try:
         with open(path, "r", newline="", encoding="utf-8") as file:
@@ -69,7 +68,7 @@ def load_from_file(table: QTableWidget, tab_name: str, date: str, log) -> None:
                 table.setRowCount(0)
 
                 # Set headers
-                table.setColumnCount(len(rows[0]))
+                table.setColumnCount(len(rows[0])+1)
                 table.setHorizontalHeaderLabels(rows[0])
 
                 # Add rows
@@ -77,9 +76,10 @@ def load_from_file(table: QTableWidget, tab_name: str, date: str, log) -> None:
                     row_position = table.rowCount()
                     table.insertRow(row_position)
                     for col, value in enumerate(row_data):
-                        table.setItem(row_position, col, QTableWidgetItem(value))
+                        table.setItem(row_position, col, QTableWidgetItem(value))                          
 
-        Log.append_log(log, f"Data successfully loaded from {path}")
+        return path
+        # append_log(log, f"Data successfully loaded from {path}")
         # QMessageBox.information(None, "File Loaded", f"Data successfully loaded from {path}")
     except Exception as e:
         QMessageBox.critical(None, "Error", f"Failed to load file: {e}")
@@ -87,13 +87,15 @@ def load_from_file(table: QTableWidget, tab_name: str, date: str, log) -> None:
 def handle_load_click(description_input, amount_input, add_button, save_button, load_button, table, tab_name, date, log):
     if table.modified:
         save_to_file(table, tab_name, date, log)
-    load_from_file(table, tab_name, date, log)
+    path = load_from_file(table, tab_name, date, log)
     description_input.setEnabled(True)
     amount_input.setEnabled(True)
     save_button.setEnabled(False)
     load_button.setEnabled(True)
     table.modified = False
     toggle_add_button(description_input, amount_input, add_button)
+
+    return path
 
 def handle_save_click(table, save_button, load_button, tab_name, date, log):
     save_to_file(table, tab_name, date, log)

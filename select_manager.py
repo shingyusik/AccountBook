@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QDialog, QVBoxLayout, QListWidget, QPushButton, QHBoxLayout, QDialogButtonBox, QInputDialog, QMessageBox, QComboBox, QListWidgetItem, QCheckBox
 import os
 import json
-import log as Log
+from utils import append_log
 
 class CategoryManager:
     CATEGORY_FILE = "categories.json"
@@ -79,10 +79,90 @@ class CategoryManager:
         try:
             with open(self.CATEGORY_FILE, "w") as file:
                 json.dump(self.categories, file, indent=4)
-            Log.append_log(log, "Categories saved successfully!")
+            append_log(log, "Categories saved successfully!")
             # QMessageBox.information(self.parent, "Success", "Categories saved successfully!")
         except IOError:
             QMessageBox.critical(self.parent, "Error", "Failed to save categories.")
+
+class MethodManager:
+    METHOD_FILE = "methods.json"
+
+    def __init__(self, parent, name):
+        self.parent = parent
+        self.name = name
+        self.methods = self.load_methods()
+
+    def edit_methods(self, method_input, log):
+        dialog = QDialog(self.parent)
+        dialog.setWindowTitle(f"Edit {self.name} Methods")
+        dialog.setGeometry(100, 100, 300, 400)
+
+        layout = QVBoxLayout()
+
+        method_list = QListWidget()
+        method_list.addItems(self.methods.get(self.name, []))
+        method_list.setDragDropMode(QListWidget.InternalMove)  # Enable drag-and-drop
+        layout.addWidget(method_list)
+
+        add_button = QPushButton("Add")
+        delete_button = QPushButton("Delete")
+        button_layout = QHBoxLayout()
+        button_layout.addWidget(add_button)
+        button_layout.addWidget(delete_button)
+        layout.addLayout(button_layout)
+
+        dialog_buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        layout.addWidget(dialog_buttons)
+
+        dialog.setLayout(layout)
+
+        def add_method():
+            text, ok = QInputDialog.getText(self.parent, "Add Method", "Enter new method:")
+            if ok and text:
+                method_list.addItem(text)
+
+        def delete_method():
+            for item in method_list.selectedItems():
+                method_list.takeItem(method_list.row(item))
+
+        add_button.clicked.connect(add_method)
+        delete_button.clicked.connect(delete_method)
+
+        def apply_changes():
+            updated_methods = [method_list.item(i).text() for i in range(method_list.count())]
+            self.methods[self.name] = updated_methods
+            method_input.clear()
+            method_input.addItems(updated_methods)
+            self.save_methods(log)
+            dialog.accept()
+
+        dialog_buttons.accepted.connect(apply_changes)
+        dialog_buttons.rejected.connect(dialog.reject)
+
+        dialog.exec_()
+
+    def load_methods(self):
+        if os.path.exists(self.METHOD_FILE):
+            try:
+                with open(self.METHOD_FILE, "r") as file:
+                    data = json.load(file)
+                    if isinstance(data, dict):
+                        return data
+                    else:
+                        raise ValueError("Invalid format in methods file.")
+            except (json.JSONDecodeError, IOError):
+                QMessageBox.warning(self.parent, "Error", "Failed to load methods. Resetting to default.")
+                return {}
+        return {}
+
+    def save_methods(self, log):
+        try:
+            with open(self.METHOD_FILE, "w") as file:
+                json.dump(self.methods, file, indent=4)
+            append_log(log, "Methods saved successfully!")
+            # QMessageBox.information(self.parent, "Success", "Categories saved successfully!")
+        except IOError:
+            QMessageBox.critical(self.parent, "Error", "Failed to save methods.")            
 
 
 class MultiSelectComboBox(QComboBox):

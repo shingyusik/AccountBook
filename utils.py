@@ -1,3 +1,5 @@
+from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QFileDialog, QMessageBox, QPushButton
+
 def mark_table_modified(table, save_button, load_button):
     """
     Marks the table as modified and updates the state of Save and Load buttons.
@@ -24,3 +26,8 @@ def toggle_add_button(description_input, amount_input, add_button):
         add_button.setEnabled(True)
     else:
         add_button.setEnabled(False)
+
+def append_log(log_text, message):
+    """로그 창에 메시지 추가"""
+    log_text.append(message)  # 메시지 추가
+    log_text.ensureCursorVisible()  # 자동 스크롤 
