@@ -21,12 +21,6 @@ class MainWindow(QMainWindow):
         self.tabs.addTab(self.tab_obj["Expenses"].tab, "Expenses")
         self.tabs.addTab(self.tab_obj["Savings"].tab, "Savings")
 
-        # self.category_obj = {}
-        # self.method_obj = {}
-        # for tab in self.tab_obj.keys():
-        #     self.category_obj[tab] = EditWindow(self, tab, "Category")
-        #     self.method_obj[tab] = EditWindow(self, tab, "Method")
-
 class EditWindow():
     def __init__(self, parent, tab_name, name) -> None:
         self.parent = parent
