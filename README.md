@@ -50,10 +50,12 @@ AccountBook/
 ├── main.py          # Main entry point for the application
 ├── requirements.txt # Dependency list
 └── src/             # Source code directory
-    ├── models.py    # Defines the data models used in the application
-    ├── utils.py     # Contains utility functions for data processing
-    ├── gui.py       # Manages the graphical user interface using PyQt
-    └── database.py  # Handles data storage and retrieval
+    ├── __init__.py       # Initializes the module
+    ├── controller.py     # Manages application logic and user interactions
+    ├── file_manager.py   # Handles file operations such as saving and loading data
+    ├── table.py          # Manages tabular data structures and interactions
+    ├── utils.py          # Contains utility functions for various operations
+    └── view.py           # Handles the graphical user interface components
 ```
 
 ## Contributing
