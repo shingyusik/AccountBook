@@ -33,7 +33,7 @@ def load_from_csv(parent, tab_name, date, log) -> None:
     path = os.path.join(directory, file_name)
 
     if not os.path.exists(path):
-        append_log(log, "There is no file to load")
+        append_log(log, "There is no file to load.")
         return []
 
     try:

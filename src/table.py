@@ -26,6 +26,7 @@ class Table:
         self.deleted_rows_stack = []
 
     def add_row(self, date_input, category, method, description, amount):
+        self.table.blockSignals(True)
         date = date_input
         input_year, input_month = date.split("-")[:2]
 
@@ -35,6 +36,7 @@ class Table:
             table_year, table_month = row_date.split("-")[:2]
             if input_year != table_year or input_month != table_month:
                 QMessageBox.warning(self, "Date Mismatch", "The year and month of the entry must match the table data.")
+                self.table.blockSignals(False)
                 return
 
         row_position = self.table.rowCount()
@@ -46,6 +48,7 @@ class Table:
         self.table.setItem(row_position, 4, QTableWidgetItem(amount))
         self.add_delete_button(row_position)
         self.is_inserted = True
+        self.table.blockSignals(False)
 
     def add_delete_button(self, row):
         button = QPushButton("-")
@@ -59,11 +62,12 @@ class Table:
         for i in range(self.table.rowCount()):
             self.add_delete_button(i)
         self.is_deleted = True
-        self.parent.check_button_enable(self)
-        self.parent.debug_print(self)
+        self.parent.check_button_enable()
+        self.parent.debug_print()
 
     def undo_delete(self):
         if self.deleted_rows_stack:
+            self.table.blockSignals(True)
             row, row_data = self.deleted_rows_stack.pop()
 
             self.table.insertRow(row)
@@ -75,3 +79,4 @@ class Table:
                 self.add_delete_button(i)
 
             self.is_deleted = True if self.deleted_rows_stack else False
+            self.table.blockSignals(False)

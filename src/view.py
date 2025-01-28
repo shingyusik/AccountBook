@@ -100,10 +100,8 @@ class TabCreator():
         self.day_input.setPlaceholderText("DD")
 
         self.save_button = QPushButton("Save to File")
-        self.save_button.setEnabled(False)
 
         self.load_button = QPushButton("Load by Date")
-        self.load_button.setEnabled(True)
 
         self.layout.addWidget(QLabel('Date:'), 0, 0, 1, 1)
         self.layout.addWidget(self.year_input, 0, 1, 1, 2)
@@ -137,12 +135,10 @@ class TabCreator():
 
         # Add
         self.add_button = QPushButton(f"Add {self.name}")
-        self.add_button.setEnabled(False)
         self.layout.addWidget(self.add_button, 4, 0, 1, 8)
 
         # Undo
         self.undo_button = QPushButton(f"Undo Deleted Row")
-        self.undo_button.setEnabled(False)
         self.layout.addWidget(self.undo_button, 4, 8, 1, 1)        
 
         # Table
