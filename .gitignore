@@ -4,3 +4,4 @@ __pycache__/
 categories.json
 methods.json
 ToDo
+venv/
