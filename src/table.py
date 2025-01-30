@@ -45,7 +45,7 @@ class Table:
         self.table.setItem(row_position, 1, QTableWidgetItem(", ".join(category) if type(category) is list else category))
         self.table.setItem(row_position, 2, QTableWidgetItem(method))
         self.table.setItem(row_position, 3, QTableWidgetItem(description))
-        self.table.setItem(row_position, 4, QTableWidgetItem(amount))
+        self.table.setItem(row_position, 4, QTableWidgetItem(str(amount)))
         self.add_delete_button(row_position)
         self.is_inserted = True
         self.table.blockSignals(False)

@@ -1,5 +1,6 @@
 from PyQt5.QtWidgets import QComboBox, QListWidget, QListWidgetItem, QCheckBox, QTableWidgetItem, QMessageBox
 from PyQt5.QtCore import QState, QStateMachine, pyqtSignal, QObject
+import re
 from src.file_manager import load_from_json, save_to_json, load_from_csv, save_to_csv
 from src.table import Table
 from src.utils import append_log
@@ -67,7 +68,7 @@ class TabController(QObject):
         # Connect table changes
         self.tab.table.cellChanged.connect(self.on_cell_changed)
 
-        # # Init state machines
+        # Init state machines
         self.init_state_machines()
 
     def run_edit(self, obj, path, item_input):
@@ -126,7 +127,18 @@ class TabController(QObject):
         description = self.tab.description_input.text()
         amount = self.tab.amount_input.text()
 
-        if date and category and method and description and amount.isdigit():
+        if not re.fullmatch(r"[0-9+\-*/(). ]+", amount):
+            QMessageBox.warning(self.view, "Error", "The amount can only be entered as a number or an arithmetic expression.")
+            return  
+
+        try:
+            amount = eval(amount, {"__builtins__": None}, {})
+            amount = int(amount)
+        except Exception:
+            QMessageBox.warning(self.view, "Error", "Invalid formula.")
+            return              
+
+        if date and category and method and description and amount:
             self.table_obj.add_row(date, category, method, description, amount)
             self.clear_selection()
             self.check_button_enable()
