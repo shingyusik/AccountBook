@@ -1,5 +1,20 @@
 from PyQt5.QtWidgets import QComboBox, QListWidget, QListWidgetItem, QCheckBox
 
+class AddClickError(Exception):
+    pass
+
+class DateError(Exception):
+    pass
+
+class LoadError(Exception):
+    pass
+
+class SaveError(Exception):
+    pass
+
+class AddRowError(Exception):
+    pass
+
 class MultiSelectComboBox(QComboBox):
     def __init__(self, parent=None):
         super().__init__(parent)

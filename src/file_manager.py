@@ -2,6 +2,7 @@ import os
 import json
 import csv
 from src.utils import append_log
+from src.utils import LoadError, SaveError
 from PyQt5.QtWidgets import QMessageBox
 
 def load_from_json(parent, path):
@@ -12,21 +13,22 @@ def load_from_json(parent, path):
                 if isinstance(data, dict):
                     return data
                 else:
-                    raise ValueError("Invalid format.")
+                    QMessageBox.warning(parent, "Error", "Invalid JSON format. Resetting to default.")
+                    return {}
         except (json.JSONDecodeError, IOError):
-            QMessageBox.warning(parent, "Error", f"Failed to load Json file in '{path}'. Resetting to default.")
+            QMessageBox.warning(parent, "Error", f"Failed to load JSON file in '{path}'. Resetting to default.")
             return {}
-    return {}    
+    return {}
 
-def save_to_json(parent, data, path, log):
+def save_to_json(data, path, log):
     try:
         with open(path, "w") as file:
             json.dump(data, file, indent=4)
         append_log(log, f"{path} saved successfully!")
-    except IOError:
-        QMessageBox.critical(parent, "Error", f"Failed to save Json file in '{path}'.")    
+    except Exception:
+        raise SaveError(f"Failed to save Json file in '{path}'.")
 
-def load_from_csv(parent, tab_name, date, log) -> None:
+def load_from_csv(tab_name, date, log) -> None:
     year, month = date.split("-")[:2]
     directory = os.path.join("Result", year)
     file_name = f"{month}_{tab_name}.csv"
@@ -43,9 +45,9 @@ def load_from_csv(parent, tab_name, date, log) -> None:
             append_log(log, f"Data successfully loaded from '{path}'")
             return rows
     except Exception as e:
-        QMessageBox.critical(parent, "Error", f"Failed to load file: {e}")
+        raise LoadError(f"Failed to load file: {e}")
 
-def save_to_csv(parent, tab_name, date, table, log) -> None:
+def save_to_csv(tab_name, date, table, log) -> None:
     year, month = date.split("-")[:2]
     directory = os.path.join("Result", year)
     os.makedirs(directory, exist_ok=True)
@@ -71,4 +73,4 @@ def save_to_csv(parent, tab_name, date, table, log) -> None:
 
         append_log(log, f"Data successfully saved to '{path}'")
     except Exception as e:
-        QMessageBox.critical(parent, "Error", f"Failed to save file: {e}")        
+        raise SaveError(f"Failed to save file: {e}")

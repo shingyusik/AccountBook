@@ -1,9 +1,12 @@
 from PyQt5.QtWidgets import QComboBox, QListWidget, QListWidgetItem, QCheckBox, QTableWidgetItem, QMessageBox
 from PyQt5.QtCore import QState, QStateMachine, pyqtSignal, QObject
+import sys
 import re
+from datetime import datetime
 from src.file_manager import load_from_json, save_to_json, load_from_csv, save_to_csv
 from src.table import Table
 from src.utils import append_log
+from src.utils import AddClickError, DateError, LoadError, SaveError, AddRowError
 
 class MainController():
     def __init__(self, view) -> None:
@@ -37,7 +40,7 @@ class TabController(QObject):
         self.tab = tab
         self.name = tab.name
         self.table_obj = Table(self, self.tab.table)
-
+        
         self.categories = load_from_json(self.view, self.CATEGORY_FILE)
         self.methods = load_from_json(self.view, self.METHOD_FILE)
 
@@ -72,91 +75,147 @@ class TabController(QObject):
         self.init_state_machines()
 
     def run_edit(self, obj, path, item_input):
-        obj.edit_view()
-        items = load_from_json(self.view, path)
-        obj.item_list.addItems(items.get(obj.tab_name, []))  
+        try:
+            obj.edit_view()
+            items = load_from_json(self.view, path)
+            obj.item_list.addItems(items.get(obj.tab_name, []))  
 
-        obj.add_button.clicked.connect(obj.add_item)
-        obj.delete_button.clicked.connect(obj.delete_item)
+            obj.add_button.clicked.connect(obj.add_item)
+            obj.delete_button.clicked.connect(obj.delete_item)
 
-        def apply_changes():
-            updated_items = [obj.item_list.item(i).text() for i in range(obj.item_list.count())]
-            items[obj.tab_name] = updated_items
-            item_input.clear()
-            if obj.name == "Category":
-                item_input.add_items(updated_items)
-            else:
-                item_input.addItems(updated_items)
-            save_to_json(self.view, items, path, self.tab.log_text)
-            obj.dialog.accept()
+            def apply_changes():
+                updated_items = [obj.item_list.item(i).text() for i in range(obj.item_list.count())]
+                items[obj.tab_name] = updated_items
+                item_input.clear()
+                if obj.name == "Category":
+                    item_input.add_items(updated_items)
+                else:
+                    item_input.addItems(updated_items)
+                save_to_json(items, path, self.tab.log_text)
+                obj.dialog.accept()
 
-        obj.dialog_buttons.accepted.connect(apply_changes)
-        obj.dialog_buttons.rejected.connect(obj.dialog.reject)      
+            obj.dialog_buttons.accepted.connect(apply_changes)
+            obj.dialog_buttons.rejected.connect(obj.dialog.reject)      
 
-        obj.dialog.exec_()        
+            obj.dialog.exec_()
+        except SaveError as e:
+            QMessageBox.warning(self.view, "SaveError", f"{e}")
+        except Exception as e:
+            QMessageBox.warning(self.view, "Error", f"An unknown error occurred while executing edit {obj.name.lower()}: {e}")
 
     def handle_load_click(self):
-        date = self.get_date()
-        if date:
-            table_list = load_from_csv(self.view, self.name, date, self.tab.log_text)
+        try:
+            date = self.get_date()
+            table_list = load_from_csv(self.name, date, self.tab.log_text)
             self.table_obj.reset(table_list)
             self.table_obj.is_loaded = True
             self.table_obj.is_cell_changed = False
             self.table_obj.is_inserted = False
             self.clear_selection()
             self.check_button_enable()
-        else:
-            QMessageBox.warning(self.view, "Error", "You must fill in all the date fields.")
-        self.debug_print()
+            self.debug_print()
+        except AddRowError as e:
+            QMessageBox.warning(self.view, "AddRowError", f"{e}")
+            self.debug_print()            
+        except LoadError as e:
+            QMessageBox.warning(self.view, "LoadError", f"{e}")
+            self.debug_print()                        
+        except DateError as e:
+            QMessageBox.warning(self.view, "DateError", f"{e}")
+            self.debug_print()            
+        except Exception as e:
+            QMessageBox.warning(self.view, "Error", f"An unknown error occurred while executing load file: {e}")
+            self.debug_print()
 
     def handle_save_click(self):
-        date = self.get_date()
-        if date:
+        try:
+            date = self.get_date()
             save_to_csv(self.view, self.name, date, self.table_obj.table, self.tab.log_text)
             self.table_obj.clear()
             self.clear_selection()
             self.check_button_enable()
-        else:
-            QMessageBox.warning(self.view, "Error", "You must fill in all the date fields.")
-        self.debug_print()
+            self.debug_print()
+        except SaveError as e:
+            QMessageBox.warning(self.view, "SaveError", f"{e}")
+            self.debug_print()            
+        except DateError as e:
+            QMessageBox.warning(self.view, "DateError", f"{e}")
+            self.debug_print()               
+        except Exception as e:
+            QMessageBox.warning(self.view, "Error", f"An unknown error occurred while executing save file: {e}")
+            self.debug_print()            
 
     def handle_add_click(self):
-        date = self.get_date()
-        category = self.tab.category_input.selected_items
-        method = self.tab.method_input.currentText()
-        description = self.tab.description_input.text()
-        amount = self.tab.amount_input.text()
-
-        if not re.fullmatch(r"[0-9+\-*/(). ]+", amount):
-            QMessageBox.warning(self.view, "Error", "The amount can only be entered as a number or an arithmetic expression.")
-            return  
-
         try:
-            amount = eval(amount, {"__builtins__": None}, {})
-            amount = int(amount)
-        except Exception:
-            QMessageBox.warning(self.view, "Error", "Invalid formula.")
-            return              
+            date = self.get_date()
+            category = self.tab.category_input.selected_items
+            method = self.tab.method_input.currentText()
+            description = self.tab.description_input.text()
+            amount = self.tab.amount_input.text()
 
-        if date and category and method and description and amount:
-            self.table_obj.add_row(date, category, method, description, amount)
-            self.clear_selection()
+            if not re.fullmatch(r"[0-9+\-*/(). ]+", amount):
+                raise AddClickError("The amount can only be entered as a number or an arithmetic expression.")
+
+            try:
+                amount = eval(amount, {"__builtins__": None}, {})
+                amount = int(amount)
+            except Exception:
+                raise AddClickError("Error", "Invalid formula.")
+
+            if date and category and method and description and amount:
+                self.table_obj.add_row(date, category, method, description, amount)
+                self.clear_selection()
+                self.check_button_enable()
+                append_log(self.tab.log_text, f"The input values have been added to the table: [{date}, {category}, {method}, {description}, {amount}]")
+            else:
+                raise AddClickError("You must fill in all the fields.")
+            self.debug_print()
+        except AddRowError as e:
+            QMessageBox.warning(self.view, "AddRowError", f"{e}")
+            self.debug_print()             
+        except DateError as e:
+            QMessageBox.warning(self.view, "DateError", f"{e}")
+            self.debug_print()               
+        except AddClickError as e:
+            QMessageBox.warning(self.view, "AddClickError", f"{e}")
+            self.debug_print()                         
+        except Exception as e:
+            QMessageBox.warning(self.view, "Error", f"An unknown error occurred while executing add entries: {e}")
+            self.debug_print()             
+
+    def handle_undo_click(self):
+        try:
+            self.table_obj.undo_delete()
             self.check_button_enable()
-            append_log(self.tab.log_text, f"The input values have been added to the table: [{date}, {category}, {method}, {description}, {amount}]")
-        else:
-            QMessageBox.warning(self.view, "Error", "You must fill in all the fields.")
-        self.debug_print()
-
-    def handle_undo_click(self):        
-        self.table_obj.undo_delete()
-        self.check_button_enable()
-        append_log(self.tab.log_text, "The deleted row has been re-added to the table.")
-        self.debug_print()
+            append_log(self.tab.log_text, "The deleted row has been re-added to the table.")
+            self.debug_print()
+        except DateError as e:
+            QMessageBox.warning(self.view, "Error", f"{e}")
+            self.debug_print()               
+        except Exception as e:
+            QMessageBox.warning(self.view, "Error", f"An unknown error occurred while executing undo delete: {e}")
+            self.debug_print()             
 
     def get_date(self):
-        is_valid = self.tab.year_input.text().isdigit() and self.tab.month_input.text().isdigit() and self.tab.day_input.text().isdigit()
-        date = f"{self.tab.year_input.text()}-{self.tab.month_input.text()}-{self.tab.day_input.text()}" if is_valid else ""
-        return date
+        if not self.tab.year_input.text().isdigit() or not self.tab.month_input.text().isdigit() or not self.tab.day_input.text().isdigit():
+            raise DateError("The date is not a number or is empty. Please check again.")
+        
+        try:
+            year = int(self.tab.year_input.text())
+            month = int(self.tab.month_input.text())
+            day = int(self.tab.day_input.text())
+
+            current_year = datetime.now().year
+            
+            if year > current_year:
+                raise DateError("The entered year is greater than the current year.")
+            
+            datetime(year, month, day)
+
+            date = f"{self.tab.year_input.text()}-{self.tab.month_input.text()}-{self.tab.day_input.text()}"
+            return date
+        except Exception as e:
+            raise DateError(f"Invalid date: {e}")
     
     def clear_selection(self):
         for i in range(self.tab.category_input.list_widget.count()):

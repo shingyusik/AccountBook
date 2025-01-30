@@ -1,4 +1,5 @@
 from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QMessageBox, QPushButton
+from src.utils import AddRowError
 
 class Table:
     def __init__(self, parent, table) -> None:
@@ -35,9 +36,8 @@ class Table:
             row_date = self.table.item(row, 0).text()
             table_year, table_month = row_date.split("-")[:2]
             if input_year != table_year or input_month != table_month:
-                QMessageBox.warning(self, "Date Mismatch", "The year and month of the entry must match the table data.")
                 self.table.blockSignals(False)
-                return
+                raise AddRowError("The year and month of the entry must match the table data.")
 
         row_position = self.table.rowCount()
         self.table.insertRow(row_position)
