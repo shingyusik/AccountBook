@@ -54,7 +54,7 @@ class TabController(QObject):
         self.tab.edit_categories_button.clicked.connect(lambda: self.run_edit(self.tab.category_edit, self.CATEGORY_FILE, self.tab.category_input))
 
         # Connect method edit button
-        self.tab.edit_methods_button.clicked.connect(lambda: self.run_edit(self.tab.method_edit, self.METHOD_FILE, self.tab.method_input, self.tab.log_text))
+        self.tab.edit_methods_button.clicked.connect(lambda: self.run_edit(self.tab.method_edit, self.METHOD_FILE, self.tab.method_input))
         
         # Connect load button
         self.tab.load_button.clicked.connect(self.handle_load_click)
@@ -197,22 +197,8 @@ class TabController(QObject):
             self.debug_print()             
 
     def get_date(self):
-        if not self.tab.year_input.text().isdigit() or not self.tab.month_input.text().isdigit() or not self.tab.day_input.text().isdigit():
-            raise DateError("The date is not a number or is empty. Please check again.")
-        
         try:
-            year = int(self.tab.year_input.text())
-            month = int(self.tab.month_input.text())
-            day = int(self.tab.day_input.text())
-
-            current_year = datetime.now().year
-            
-            if year > current_year:
-                raise DateError("The entered year is greater than the current year.")
-            
-            datetime(year, month, day)
-
-            date = f"{self.tab.year_input.text()}-{self.tab.month_input.text()}-{self.tab.day_input.text()}"
+            date = self.tab.date_input.date().toString("yyyy-MM-dd")            
             return date
         except Exception as e:
             raise DateError(f"Invalid date: {e}")

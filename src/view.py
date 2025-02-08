@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QMainWindow, QTabWidget, QVBoxLayout, QHBoxLayout, QWidget, QLineEdit, QPushButton, QTableWidget, QTableWidgetItem, QComboBox, QMessageBox, QTextEdit, QSizePolicy, QGridLayout, QLabel
+from PyQt5.QtWidgets import QMainWindow, QTabWidget, QVBoxLayout, QHBoxLayout, QWidget, QLineEdit, QPushButton, QTableWidget, QTableWidgetItem, QComboBox, QMessageBox, QTextEdit, QSizePolicy, QGridLayout, QLabel, QDateEdit
 from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QListWidget, QInputDialog
 from PyQt5.QtCore import QDate
 from src.utils import MultiSelectComboBox
@@ -76,33 +76,18 @@ class TabCreator():
         self.layout = QGridLayout()
         
         # Date input, load, save
-        today = QDate.currentDate().toString("yyyy-MM-dd")
-        year = today.split("-")[0]
-        month = today.split("-")[1]
-        day = today.split("-")[2]
-
-        self.year_input = QLineEdit()
-        self.year_input.setText(year)
-        self.year_input.setPlaceholderText("YYYY")
-
-        self.month_input = QLineEdit()      
-        self.month_input.setText(month)
-        self.month_input.setPlaceholderText("MM")
-
-        self.day_input = QLineEdit()
-        self.day_input.setText(day)
-        self.day_input.setPlaceholderText("DD")
+        self.date_input = QDateEdit()
+        self.date_input.setDate(QDate.currentDate())  # 현재 날짜 기본값 설정
+        self.date_input.setCalendarPopup(True)  # 캘린더 팝업 사용 가능
 
         self.save_button = QPushButton("Save to File")
 
         self.load_button = QPushButton("Load by Date")
 
         self.layout.addWidget(QLabel('Date:'), 0, 0, 1, 1)
-        self.layout.addWidget(self.year_input, 0, 1, 1, 2)
-        self.layout.addWidget(self.month_input, 0, 3, 1, 2)
-        self.layout.addWidget(self.day_input, 0, 5, 1, 2)
-        self.layout.addWidget(self.load_button, 0, 7, 1, 1)
-        self.layout.addWidget(self.save_button, 0, 8, 1, 1)
+        self.layout.addWidget(self.date_input, 0, 1, 1, 3)        
+        self.layout.addWidget(self.load_button, 0, 4, 1, 2)
+        self.layout.addWidget(self.save_button, 0, 6, 1, 2)
         
         # Category
         self.category_input = MultiSelectComboBox()
