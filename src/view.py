@@ -131,7 +131,7 @@ class TabCreator():
         self.log_text.setPlaceholderText("Log messages are displayed here...")
         self.layout.addWidget(self.log_text, 13, 0, 1, 9)            
 
-        self.layout.setRowStretch(5, 8)
-        self.layout.setRowStretch(13, 1)
+        # self.layout.setRowStretch(5, 8)
+        # self.layout.setRowStretch(13, 1)
 
         self.tab.setLayout(self.layout)
